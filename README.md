@@ -36,7 +36,9 @@ A RESTful API for managing tasks with CRUD operations built with Express.js and 
   "priority": "medium",
   "createdAt": "2025-07-31T15:44:04.573Z"
 }
-```## API Endpoints
+```
+
+## API Endpoints
 
 ### GET /tasks
 
