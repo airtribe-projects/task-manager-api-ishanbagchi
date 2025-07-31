@@ -27,14 +27,14 @@ A RESTful API for managing tasks with CRUD operations built with Express.js and 
 
 ## Task Schema
 
-````json
+```json
 {
-  "id": 2,
-  "title": "Create a new project",
-  "description": "Create a new project using Magic",
-  "completed": false,
-  "priority": "medium",
-  "createdAt": "2025-07-31T15:44:04.573Z"
+	"id": 2,
+	"title": "Create a new project",
+	"description": "Create a new project using Magic",
+	"completed": false,
+	"priority": "medium",
+	"createdAt": "2025-07-31T15:44:04.573Z"
 }
 ```
 
@@ -45,15 +45,18 @@ A RESTful API for managing tasks with CRUD operations built with Express.js and 
 Retrieve all tasks with optional filtering and sorting.
 
 **Query Parameters (all optional):**
-- `completed` - Filter by completion status (true/false)
-- `sortBy` - Sort by field (createdAt/title/priority/completed, default: createdAt)
-- `order` - Sort order (asc/desc, default: desc)
+
+-   `completed` - Filter by completion status (true/false)
+-   `sortBy` - Sort by field (createdAt/title/priority/completed, default: createdAt)
+-   `order` - Sort order (asc/desc, default: desc)
 
 **Response:**
-- `200 OK` - Returns array of tasks (no query params) or object with metadata (with query params)
-- `500 Internal Server Error` - Server error
+
+-   `200 OK` - Returns array of tasks (no query params) or object with metadata (with query params)
+-   `500 Internal Server Error` - Server error
 
 **Examples:**
+
 ```bash
 # Get all tasks
 curl http://localhost:3000/tasks
@@ -66,7 +69,7 @@ curl "http://localhost:3000/tasks?sortBy=priority&order=desc"
 
 # Combine filters and sorting
 curl "http://localhost:3000/tasks?completed=false&sortBy=createdAt&order=asc"
-````
+```
 
 ### GET /tasks/priority/:level
 
