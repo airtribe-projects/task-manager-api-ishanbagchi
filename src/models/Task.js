@@ -1,9 +1,18 @@
 class Task {
-	constructor(id, title, description, completed = false) {
+	constructor(
+		id,
+		title,
+		description,
+		completed = false,
+		priority = 'medium',
+		createdAt = null,
+	) {
 		this.id = id
 		this.title = title
 		this.description = description
 		this.completed = completed
+		this.priority = priority
+		this.createdAt = createdAt || new Date().toISOString()
 	}
 
 	static validate(taskData) {
@@ -37,6 +46,18 @@ class Task {
 		if (taskData.completed !== undefined) {
 			if (typeof taskData.completed !== 'boolean') {
 				errors.push('Completed must be a boolean value (true or false)')
+			}
+		}
+
+		// Validate priority
+		if (taskData.priority !== undefined) {
+			const validPriorities = ['low', 'medium', 'high']
+			if (typeof taskData.priority !== 'string') {
+				errors.push('Priority must be a string')
+			} else if (
+				!validPriorities.includes(taskData.priority.toLowerCase())
+			) {
+				errors.push('Priority must be one of: low, medium, high')
 			}
 		}
 
@@ -77,6 +98,18 @@ class Task {
 		if (taskData.completed !== undefined) {
 			if (typeof taskData.completed !== 'boolean') {
 				errors.push('Completed must be a boolean value (true or false)')
+			}
+		}
+
+		// Validate priority (if provided)
+		if (taskData.priority !== undefined) {
+			const validPriorities = ['low', 'medium', 'high']
+			if (typeof taskData.priority !== 'string') {
+				errors.push('Priority must be a string')
+			} else if (
+				!validPriorities.includes(taskData.priority.toLowerCase())
+			) {
+				errors.push('Priority must be one of: low, medium, high')
 			}
 		}
 

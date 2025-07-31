@@ -53,6 +53,9 @@ const validateCreateTask = (req, res, next) => {
 		title: body.title?.toString().trim(),
 		description: body.description?.toString().trim(),
 		completed: Boolean(body.completed),
+		priority: body.priority
+			? body.priority.toString().toLowerCase()
+			: 'medium',
 	}
 
 	next()
@@ -67,12 +70,12 @@ const validateUpdateTask = (req, res, next) => {
 		return res.status(400).json({
 			error: 'Request body is required',
 			details:
-				'Please provide at least one field to update (title, description, or completed)',
+				'Please provide at least one field to update (title, description, completed, or priority)',
 		})
 	}
 
 	// Check if at least one valid field is provided
-	const allowedFields = ['title', 'description', 'completed']
+	const allowedFields = ['title', 'description', 'completed', 'priority']
 	const providedFields = Object.keys(body)
 	const validFields = providedFields.filter((field) =>
 		allowedFields.includes(field),
@@ -112,6 +115,9 @@ const validateUpdateTask = (req, res, next) => {
 	if (cleanBody.completed !== undefined) {
 		sanitizedBody.completed = Boolean(cleanBody.completed)
 	}
+	if (cleanBody.priority !== undefined) {
+		sanitizedBody.priority = cleanBody.priority.toString().toLowerCase()
+	}
 
 	req.body = sanitizedBody
 	next()
@@ -141,10 +147,78 @@ const validateContentType = (req, res, next) => {
 	next()
 }
 
+// Middleware to validate priority level parameter
+const validatePriorityLevel = (req, res, next) => {
+	const { level } = req.params
+	const validPriorities = ['low', 'medium', 'high']
+
+	if (!level) {
+		return res.status(400).json({
+			error: 'Priority level is required',
+			details: 'Please provide a valid priority level in the URL',
+		})
+	}
+
+	if (!validPriorities.includes(level.toLowerCase())) {
+		return res.status(400).json({
+			error: 'Invalid priority level',
+			details: `Priority level must be one of: ${validPriorities.join(
+				', ',
+			)}`,
+		})
+	}
+
+	// Add normalized priority to request
+	req.priorityLevel = level.toLowerCase()
+	next()
+}
+
+// Middleware to validate query parameters for filtering and sorting
+const validateQueryParams = (req, res, next) => {
+	const { completed, sortBy, order } = req.query
+
+	// Validate completed filter
+	if (completed !== undefined) {
+		if (!['true', 'false'].includes(completed.toLowerCase())) {
+			return res.status(400).json({
+				error: 'Invalid completed filter',
+				details: 'completed parameter must be "true" or "false"',
+			})
+		}
+		req.query.completed = completed.toLowerCase() === 'true'
+	}
+
+	// Validate sortBy parameter
+	if (sortBy !== undefined) {
+		const validSortFields = ['createdAt', 'title', 'priority', 'completed']
+		if (!validSortFields.includes(sortBy)) {
+			return res.status(400).json({
+				error: 'Invalid sort field',
+				details: `sortBy must be one of: ${validSortFields.join(', ')}`,
+			})
+		}
+	}
+
+	// Validate order parameter
+	if (order !== undefined) {
+		if (!['asc', 'desc'].includes(order.toLowerCase())) {
+			return res.status(400).json({
+				error: 'Invalid sort order',
+				details: 'order parameter must be "asc" or "desc"',
+			})
+		}
+		req.query.order = order.toLowerCase()
+	}
+
+	next()
+}
+
 module.exports = {
 	validateTaskId,
 	validateCreateTask,
 	validateUpdateTask,
+	validatePriorityLevel,
+	validateQueryParams,
 	sanitizeInput,
 	validateContentType,
 }

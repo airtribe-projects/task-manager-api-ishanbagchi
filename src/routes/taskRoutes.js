@@ -5,6 +5,8 @@ const {
 	validateTaskId,
 	validateCreateTask,
 	validateUpdateTask,
+	validatePriorityLevel,
+	validateQueryParams,
 	sanitizeInput,
 	validateContentType,
 } = require('../middleware/validationMiddleware')
@@ -13,8 +15,19 @@ const {
 router.use(sanitizeInput)
 router.use(validateContentType)
 
-// GET /tasks - Retrieve all tasks
-router.get('/', taskController.getAllTasks.bind(taskController))
+// GET /tasks - Retrieve all tasks with optional filtering and sorting
+router.get(
+	'/',
+	validateQueryParams,
+	taskController.getAllTasks.bind(taskController),
+)
+
+// GET /tasks/priority/:level - Retrieve tasks by priority level
+router.get(
+	'/priority/:level',
+	validatePriorityLevel,
+	taskController.getTasksByPriority.bind(taskController),
+)
 
 // GET /tasks/:id - Retrieve a specific task by ID
 router.get(

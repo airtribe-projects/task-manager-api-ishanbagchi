@@ -23,6 +23,8 @@ class TaskService {
 							task.title,
 							task.description,
 							task.completed,
+							task.priority || 'medium', // Default priority if not specified
+							task.createdAt || new Date().toISOString(),
 						),
 				)
 
@@ -41,8 +43,55 @@ class TaskService {
 		}
 	}
 
-	getAllTasks() {
-		return this.tasks
+	getAllTasks(filters = {}, sorting = {}) {
+		let filteredTasks = [...this.tasks]
+
+		// Apply filters
+		if (filters.completed !== undefined) {
+			filteredTasks = filteredTasks.filter(
+				(task) => task.completed === filters.completed,
+			)
+		}
+
+		// Apply sorting
+		if (sorting.sortBy) {
+			filteredTasks.sort((a, b) => {
+				let aValue = a[sorting.sortBy]
+				let bValue = b[sorting.sortBy]
+
+				// Handle different data types
+				if (sorting.sortBy === 'createdAt') {
+					aValue = new Date(aValue)
+					bValue = new Date(bValue)
+				} else if (sorting.sortBy === 'priority') {
+					// Priority order: high > medium > low
+					const priorityOrder = { high: 3, medium: 2, low: 1 }
+					aValue = priorityOrder[aValue] || 2
+					bValue = priorityOrder[bValue] || 2
+				} else if (
+					typeof aValue === 'string' &&
+					typeof bValue === 'string'
+				) {
+					aValue = aValue.toLowerCase()
+					bValue = bValue.toLowerCase()
+				}
+
+				if (aValue < bValue) return sorting.order === 'desc' ? 1 : -1
+				if (aValue > bValue) return sorting.order === 'desc' ? -1 : 1
+				return 0
+			})
+		} else {
+			// Default sort by creation date (newest first)
+			filteredTasks.sort(
+				(a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+			)
+		}
+
+		return filteredTasks
+	}
+
+	getTasksByPriority(priority) {
+		return this.tasks.filter((task) => task.priority === priority)
 	}
 
 	getTaskById(id) {
@@ -62,6 +111,7 @@ class TaskService {
 			taskData.title, // Already sanitized by middleware
 			taskData.description, // Already sanitized by middleware
 			taskData.completed || false,
+			taskData.priority || 'medium', // Default priority
 		)
 
 		this.tasks.push(newTask)
@@ -91,6 +141,9 @@ class TaskService {
 		}
 		if (taskData.completed !== undefined) {
 			this.tasks[taskIndex].completed = taskData.completed
+		}
+		if (taskData.priority !== undefined) {
+			this.tasks[taskIndex].priority = taskData.priority
 		}
 
 		return this.tasks[taskIndex]

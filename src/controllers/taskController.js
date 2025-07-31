@@ -1,11 +1,37 @@
 const taskService = require('../services/taskService')
 
 class TaskController {
-	// GET /tasks - Retrieve all tasks
+	// GET /tasks - Retrieve all tasks with optional filtering and sorting
 	getAllTasks(req, res) {
 		try {
-			const tasks = taskService.getAllTasks()
-			res.status(200).json(tasks)
+			const {
+				completed,
+				sortBy = 'createdAt',
+				order = 'desc',
+			} = req.query
+
+			const filters = {}
+			if (completed !== undefined) {
+				filters.completed = completed
+			}
+
+			const sorting = { sortBy, order }
+
+			const tasks = taskService.getAllTasks(filters, sorting)
+
+			// For backward compatibility: return just tasks array if no query params
+			const hasQueryParams = Object.keys(req.query).length > 0
+
+			if (hasQueryParams) {
+				res.status(200).json({
+					tasks,
+					count: tasks.length,
+					filters: filters,
+					sorting: sorting,
+				})
+			} else {
+				res.status(200).json(tasks)
+			}
 		} catch (error) {
 			console.error('Error retrieving tasks:', error)
 			res.status(500).json({
@@ -79,6 +105,26 @@ class TaskController {
 			res.status(500).json({
 				error: 'Internal server error',
 				details: 'Failed to update task',
+			})
+		}
+	}
+
+	// GET /tasks/priority/:level - Retrieve tasks by priority level
+	getTasksByPriority(req, res) {
+		try {
+			const priorityLevel = req.priorityLevel // Use validated priority from middleware
+			const tasks = taskService.getTasksByPriority(priorityLevel)
+
+			res.status(200).json({
+				tasks,
+				count: tasks.length,
+				priority: priorityLevel,
+			})
+		} catch (error) {
+			console.error('Error retrieving tasks by priority:', error)
+			res.status(500).json({
+				error: 'Internal server error',
+				details: 'Failed to retrieve tasks by priority',
 			})
 		}
 	}

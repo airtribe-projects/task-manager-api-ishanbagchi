@@ -5,9 +5,9 @@ A RESTful API for managing tasks with CRUD operations built with Express.js and 
 ## Project Structure
 
 ```
-├── app.js                 # Main Express application
-├── server.js             # Server startup file
-├── package.json          # Dependencies and scripts
+├── app.js               # Main Express application
+├── server.js            # Server startup file
+├── package.json         # Dependencies and scripts
 ├── task.json            # Initial data file
 ├── test/                # Test files
 │   └── server.test.js   # API tests
@@ -16,41 +16,74 @@ A RESTful API for managing tasks with CRUD operations built with Express.js and 
     │   └── taskController.js
     ├── middleware/      # Custom middleware
     │   └── errorMiddleware.js
-    ├── models/         # Data models
+    ├── models/          # Data models
     │   └── Task.js
-    ├── routes/         # Route definitions
+    ├── routes/          # Route definitions
     │   ├── index.js
     │   └── taskRoutes.js
-    └── services/       # Business logic
+    └── services/        # Business logic
         └── taskService.js
 ```
 
 ## Task Schema
 
-```json
+````json
 {
-	"id": 2,
-	"title": "Create a new project",
-	"description": "Create a new project using Magic",
-	"completed": false
+  "id": 2,
+  "title": "Create a new project",
+  "description": "Create a new project using Magic",
+  "completed": false,
+  "priority": "medium",
+  "createdAt": "2025-07-31T15:44:04.573Z"
 }
-```
-
-## API Endpoints
+```## API Endpoints
 
 ### GET /tasks
 
-Retrieve all tasks.
+Retrieve all tasks with optional filtering and sorting.
+
+**Query Parameters (all optional):**
+- `completed` - Filter by completion status (true/false)
+- `sortBy` - Sort by field (createdAt/title/priority/completed, default: createdAt)
+- `order` - Sort order (asc/desc, default: desc)
+
+**Response:**
+- `200 OK` - Returns array of tasks (no query params) or object with metadata (with query params)
+- `500 Internal Server Error` - Server error
+
+**Examples:**
+```bash
+# Get all tasks
+curl http://localhost:3000/tasks
+
+# Get completed tasks
+curl "http://localhost:3000/tasks?completed=true"
+
+# Get tasks sorted by priority (high to low)
+curl "http://localhost:3000/tasks?sortBy=priority&order=desc"
+
+# Combine filters and sorting
+curl "http://localhost:3000/tasks?completed=false&sortBy=createdAt&order=asc"
+````
+
+### GET /tasks/priority/:level
+
+Retrieve tasks by priority level.
+
+**Parameters:**
+
+-   `level` (string) - Priority level (low/medium/high)
 
 **Response:**
 
--   `200 OK` - Returns array of all tasks
+-   `200 OK` - Returns object with tasks array and metadata
+-   `400 Bad Request` - Invalid priority level
 -   `500 Internal Server Error` - Server error
 
 **Example:**
 
 ```bash
-curl http://localhost:3000/tasks
+curl http://localhost:3000/tasks/priority/high
 ```
 
 ### GET /tasks/:id
@@ -83,7 +116,8 @@ Create a new task with the required fields.
 {
   "title": "Task title (required)",
   "description": "Task description (required)",
-  "completed": false (optional, defaults to false)
+  "completed": false (optional, defaults to false),
+  "priority": "medium" (optional, defaults to medium, values: low/medium/high)
 }
 ```
 
@@ -119,7 +153,8 @@ Update an existing task by its ID.
 {
 	"title": "Updated title",
 	"description": "Updated description",
-	"completed": true
+	"completed": true,
+	"priority": "high"
 }
 ```
 
@@ -214,6 +249,11 @@ npm run dev
 -   ✅ Clean project structure with middleware separation
 -   ✅ Comprehensive test suite (19 tests passing)
 -   ✅ Initial data loading from JSON file
+-   ✅ Task filtering by completion status
+-   ✅ Task sorting by multiple fields (createdAt, title, priority, completed)
+-   ✅ Priority-based task management (low/medium/high)
+-   ✅ Priority-specific endpoints
+-   ✅ Automatic creation date tracking
 
 ## Validation Rules
 
@@ -222,6 +262,7 @@ npm run dev
 -   **Title**: Required, non-empty string, max 200 characters
 -   **Description**: Required, non-empty string, max 1000 characters
 -   **Completed**: Optional boolean (defaults to false)
+-   **Priority**: Optional string (low/medium/high, defaults to medium)
 -   **Content-Type**: Must be application/json
 
 ### Task Updates (PUT /tasks/:id)
@@ -229,8 +270,16 @@ npm run dev
 -   **Title**: Optional, non-empty string, max 200 characters
 -   **Description**: Optional, non-empty string, max 1000 characters
 -   **Completed**: Optional boolean
+-   **Priority**: Optional string (low/medium/high)
 -   **Task ID**: Must be positive integer
 -   **Content-Type**: Must be application/json
+
+### Query Parameters
+
+-   **completed**: Must be "true" or "false"
+-   **sortBy**: Must be one of: createdAt, title, priority, completed
+-   **order**: Must be "asc" or "desc"
+-   **priority level**: Must be one of: low, medium, high
 
 ### Error Responses
 

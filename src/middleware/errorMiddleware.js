@@ -54,10 +54,15 @@ const notFoundHandler = (req, res) => {
 		timestamp: new Date().toISOString(),
 		availableEndpoints: {
 			tasks: {
-				'GET /tasks': 'Get all tasks',
+				'GET /tasks':
+					'Get all tasks (supports ?completed=true/false&sortBy=createdAt/title/priority&order=asc/desc)',
 				'GET /tasks/:id': 'Get task by ID',
-				'POST /tasks': 'Create new task',
-				'PUT /tasks/:id': 'Update task by ID',
+				'GET /tasks/priority/:level':
+					'Get tasks by priority (low/medium/high)',
+				'POST /tasks':
+					'Create new task (supports title, description, completed, priority)',
+				'PUT /tasks/:id':
+					'Update task by ID (supports title, description, completed, priority)',
 				'DELETE /tasks/:id': 'Delete task by ID',
 			},
 		},
