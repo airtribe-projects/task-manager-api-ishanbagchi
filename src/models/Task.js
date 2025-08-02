@@ -2,64 +2,90 @@ class Task {
 	constructor(
 		id,
 		title,
-		description,
+		description = '',
 		completed = false,
 		priority = 'medium',
-		createdAt = null,
+		createdAt = new Date().toISOString(),
 	) {
 		this.id = id
 		this.title = title
 		this.description = description
 		this.completed = completed
 		this.priority = priority
-		this.createdAt = createdAt || new Date().toISOString()
+		this.createdAt = createdAt
 	}
 
-	static validate(taskData) {
+	// Helper validation methods
+	static validateTitle(title, isRequired = true) {
 		const errors = []
 
-		// Validate title
-		if (!taskData.title) {
+		if (isRequired && !title) {
 			errors.push('Title is required')
-		} else if (typeof taskData.title !== 'string') {
-			errors.push('Title must be a string')
-		} else if (taskData.title.trim() === '') {
-			errors.push('Title cannot be empty or contain only whitespace')
-		} else if (taskData.title.trim().length > 200) {
-			errors.push('Title cannot exceed 200 characters')
-		}
-
-		// Validate description
-		if (!taskData.description) {
-			errors.push('Description is required')
-		} else if (typeof taskData.description !== 'string') {
-			errors.push('Description must be a string')
-		} else if (taskData.description.trim() === '') {
-			errors.push(
-				'Description cannot be empty or contain only whitespace',
-			)
-		} else if (taskData.description.trim().length > 1000) {
-			errors.push('Description cannot exceed 1000 characters')
-		}
-
-		// Validate completed status
-		if (taskData.completed !== undefined) {
-			if (typeof taskData.completed !== 'boolean') {
-				errors.push('Completed must be a boolean value (true or false)')
+		} else if (title !== undefined) {
+			if (typeof title !== 'string') {
+				errors.push('Title must be a string')
+			} else if (title.trim() === '') {
+				errors.push('Title cannot be empty or contain only whitespace')
+			} else if (title.trim().length > 200) {
+				errors.push('Title cannot exceed 200 characters')
 			}
 		}
 
-		// Validate priority
-		if (taskData.priority !== undefined) {
+		return errors
+	}
+
+	static validateDescription(description, isRequired = true) {
+		const errors = []
+
+		if (isRequired && !description) {
+			errors.push('Description is required')
+		} else if (description !== undefined) {
+			if (typeof description !== 'string') {
+				errors.push('Description must be a string')
+			} else if (description.trim() === '') {
+				errors.push(
+					'Description cannot be empty or contain only whitespace',
+				)
+			} else if (description.trim().length > 1000) {
+				errors.push('Description cannot exceed 1000 characters')
+			}
+		}
+
+		return errors
+	}
+
+	static validateCompleted(completed) {
+		const errors = []
+
+		if (completed !== undefined && typeof completed !== 'boolean') {
+			errors.push('Completed must be a boolean value (true or false)')
+		}
+
+		return errors
+	}
+
+	static validatePriority(priority) {
+		const errors = []
+
+		if (priority !== undefined) {
 			const validPriorities = ['low', 'medium', 'high']
-			if (typeof taskData.priority !== 'string') {
+			if (typeof priority !== 'string') {
 				errors.push('Priority must be a string')
-			} else if (
-				!validPriorities.includes(taskData.priority.toLowerCase())
-			) {
+			} else if (!validPriorities.includes(priority.toLowerCase())) {
 				errors.push('Priority must be one of: low, medium, high')
 			}
 		}
+
+		return errors
+	}
+
+	static validate(taskData) {
+		const errors = [
+			...this.validateTitle(taskData.title, true),
+			...this.validateDescription(taskData.description, true),
+			...this.validateCompleted(taskData.completed),
+			...this.validatePriority(taskData.priority),
+		]
 
 		return {
 			isValid: errors.length === 0,
@@ -68,55 +94,22 @@ class Task {
 	}
 
 	static validateUpdate(taskData) {
-		const errors = []
-
-		// Validate title (if provided)
-		if (taskData.title !== undefined) {
-			if (typeof taskData.title !== 'string') {
-				errors.push('Title must be a string')
-			} else if (taskData.title.trim() === '') {
-				errors.push('Title cannot be empty or contain only whitespace')
-			} else if (taskData.title.trim().length > 200) {
-				errors.push('Title cannot exceed 200 characters')
-			}
-		}
-
-		// Validate description (if provided)
-		if (taskData.description !== undefined) {
-			if (typeof taskData.description !== 'string') {
-				errors.push('Description must be a string')
-			} else if (taskData.description.trim() === '') {
-				errors.push(
-					'Description cannot be empty or contain only whitespace',
-				)
-			} else if (taskData.description.trim().length > 1000) {
-				errors.push('Description cannot exceed 1000 characters')
-			}
-		}
-
-		// Validate completed status (if provided)
-		if (taskData.completed !== undefined) {
-			if (typeof taskData.completed !== 'boolean') {
-				errors.push('Completed must be a boolean value (true or false)')
-			}
-		}
-
-		// Validate priority (if provided)
-		if (taskData.priority !== undefined) {
-			const validPriorities = ['low', 'medium', 'high']
-			if (typeof taskData.priority !== 'string') {
-				errors.push('Priority must be a string')
-			} else if (
-				!validPriorities.includes(taskData.priority.toLowerCase())
-			) {
-				errors.push('Priority must be one of: low, medium, high')
-			}
-		}
+		const errors = [
+			...this.validateTitle(taskData.title, false),
+			...this.validateDescription(taskData.description, false),
+			...this.validateCompleted(taskData.completed),
+			...this.validatePriority(taskData.priority),
+		]
 
 		return {
 			isValid: errors.length === 0,
 			errors,
 		}
+	}
+
+	// Get sortable fields for query parameter validation
+	static getSortableFields() {
+		return ['createdAt', 'title', 'priority', 'completed']
 	}
 }
 

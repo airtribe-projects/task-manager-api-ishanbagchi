@@ -1,4 +1,34 @@
+const winston = require('winston')
 const taskService = require('../services/taskService')
+
+// Winston logger setup for TaskController
+const logger = winston.createLogger({
+	level: 'error',
+	format: winston.format.combine(
+		winston.format.timestamp(),
+		winston.format.errors({ stack: true }),
+		winston.format.printf(
+			({ timestamp, level, message, stack, ...meta }) => {
+				const metaStr = Object.keys(meta).length
+					? ` ${JSON.stringify(meta)}`
+					: ''
+				return `[${timestamp}] ${level.toUpperCase()}: ${message}${
+					stack ? `\n${stack}` : ''
+				}${metaStr}`
+			},
+		),
+	),
+	transports: [
+		new winston.transports.Console({
+			format: winston.format.combine(
+				winston.format.colorize(),
+				winston.format.simple(),
+			),
+		}),
+		// Uncomment for file logging in production
+		// new winston.transports.File({ filename: 'logs/task-controller.log', level: 'error' })
+	],
+})
 
 class TaskController {
 	// GET /tasks - Retrieve all tasks with optional filtering and sorting
@@ -12,7 +42,17 @@ class TaskController {
 
 			const filters = {}
 			if (completed !== undefined) {
-				filters.completed = completed
+				// Only set filters.completed if the value is exactly 'true' or 'false' (case-insensitive)
+				if (typeof completed === 'string') {
+					if (completed.toLowerCase() === 'true') {
+						filters.completed = true
+					} else if (completed.toLowerCase() === 'false') {
+						filters.completed = false
+					}
+					// If not 'true' or 'false', do not set filters.completed
+				} else if (typeof completed === 'boolean') {
+					filters.completed = completed
+				}
 			}
 
 			const sorting = { sortBy, order }
@@ -33,7 +73,11 @@ class TaskController {
 				res.status(200).json(tasks)
 			}
 		} catch (error) {
-			console.error('Error retrieving tasks:', error)
+			logger.error('Error retrieving tasks:', {
+				error: error.message,
+				stack: error.stack,
+				method: 'getAllTasks',
+			})
 			res.status(500).json({
 				error: 'Internal server error',
 				details: 'Failed to retrieve tasks',
@@ -56,7 +100,12 @@ class TaskController {
 
 			res.status(200).json(task)
 		} catch (error) {
-			console.error('Error retrieving task:', error)
+			logger.error('Error retrieving task:', {
+				error: error.message,
+				stack: error.stack,
+				method: 'getTaskById',
+				taskId: req.taskId,
+			})
 			res.status(500).json({
 				error: 'Internal server error',
 				details: 'Failed to retrieve task',
@@ -73,8 +122,13 @@ class TaskController {
 				task: newTask,
 			})
 		} catch (error) {
-			console.error('Error creating task:', error)
-			// Validation errors are handled by middleware, so this is likely a service error
+			logger.error('Error creating task:', {
+				error: error.message,
+				stack: error.stack,
+				method: 'createTask',
+				taskData: req.body,
+			})
+			// Data is pre-validated by middleware, any errors here are unexpected service issues
 			res.status(500).json({
 				error: 'Internal server error',
 				details: 'Failed to create task',
@@ -100,8 +154,14 @@ class TaskController {
 				task: updatedTask,
 			})
 		} catch (error) {
-			console.error('Error updating task:', error)
-			// Validation errors are handled by middleware, so this is likely a service error
+			logger.error('Error updating task:', {
+				error: error.message,
+				stack: error.stack,
+				method: 'updateTask',
+				taskId: req.taskId,
+				updateData: req.body,
+			})
+			// Data is pre-validated by middleware, any errors here are unexpected service issues
 			res.status(500).json({
 				error: 'Internal server error',
 				details: 'Failed to update task',
@@ -121,7 +181,12 @@ class TaskController {
 				priority: priorityLevel,
 			})
 		} catch (error) {
-			console.error('Error retrieving tasks by priority:', error)
+			logger.error('Error retrieving tasks by priority:', {
+				error: error.message,
+				stack: error.stack,
+				method: 'getTasksByPriority',
+				priorityLevel: req.priorityLevel,
+			})
 			res.status(500).json({
 				error: 'Internal server error',
 				details: 'Failed to retrieve tasks by priority',
@@ -147,7 +212,12 @@ class TaskController {
 				task: deletedTask,
 			})
 		} catch (error) {
-			console.error('Error deleting task:', error)
+			logger.error('Error deleting task:', {
+				error: error.message,
+				stack: error.stack,
+				method: 'deleteTask',
+				taskId: req.taskId,
+			})
 			res.status(500).json({
 				error: 'Internal server error',
 				details: 'Failed to delete task',

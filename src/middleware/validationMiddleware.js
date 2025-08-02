@@ -1,3 +1,6 @@
+// Import Task model for validation methods
+// The Task class provides validate() and validateUpdate() methods
+// for validating task data according to business rules
 const Task = require('../models/Task')
 
 // Middleware to validate task ID parameter
@@ -12,8 +15,17 @@ const validateTaskId = (req, res, next) => {
 		})
 	}
 
+	// Check if ID is a string (as expected from URL params)
+	if (typeof id !== 'string') {
+		return res.status(400).json({
+			error: 'Invalid task ID format',
+			details:
+				'Task ID must be a valid string representation of a number',
+		})
+	}
+
 	// Check if ID is a valid number
-	const taskId = parseInt(id)
+	const taskId = parseInt(id, 10)
 	if (isNaN(taskId) || taskId <= 0) {
 		return res.status(400).json({
 			error: 'Invalid task ID',
@@ -31,7 +43,7 @@ const validateCreateTask = (req, res, next) => {
 	const { body } = req
 
 	// Check if request body exists
-	if (!body || Object.keys(body).length === 0) {
+	if (!body || Object.entries(body).length === 0) {
 		return res.status(400).json({
 			error: 'Request body is required',
 			details: 'Please provide task data in the request body',
@@ -52,7 +64,10 @@ const validateCreateTask = (req, res, next) => {
 	req.body = {
 		title: body.title?.toString().trim(),
 		description: body.description?.toString().trim(),
-		completed: Boolean(body.completed),
+		completed:
+			body.completed !== undefined
+				? body.completed === true || body.completed === 'true'
+				: false, // Default to false if not provided
 		priority: body.priority
 			? body.priority.toString().toLowerCase()
 			: 'medium',
@@ -66,7 +81,7 @@ const validateUpdateTask = (req, res, next) => {
 	const { body } = req
 
 	// Check if request body exists
-	if (!body || Object.keys(body).length === 0) {
+	if (!body || Object.entries(body).length === 0) {
 		return res.status(400).json({
 			error: 'Request body is required',
 			details:
@@ -113,7 +128,8 @@ const validateUpdateTask = (req, res, next) => {
 		sanitizedBody.description = cleanBody.description.toString().trim()
 	}
 	if (cleanBody.completed !== undefined) {
-		sanitizedBody.completed = Boolean(cleanBody.completed)
+		sanitizedBody.completed =
+			cleanBody.completed === true || cleanBody.completed === 'true'
 	}
 	if (cleanBody.priority !== undefined) {
 		sanitizedBody.priority = cleanBody.priority.toString().toLowerCase()
@@ -125,25 +141,78 @@ const validateUpdateTask = (req, res, next) => {
 
 // General input sanitization middleware
 const sanitizeInput = (req, res, next) => {
-	// Remove any potentially harmful properties
-	if (req.body) {
-		delete req.body.id // Don't allow ID to be set via request body
-		delete req.body.__proto__
-		delete req.body.constructor
+	try {
+		// Remove any potentially harmful properties
+		if (req.body) {
+			delete req.body.id // Don't allow ID to be set via request body
+			delete req.body.__proto__
+			delete req.body.constructor
+		}
+		next()
+	} catch (error) {
+		// Handle any errors during sanitization
+		return res.status(500).json({
+			errorMessage: 'Input sanitization failed',
+			details: 'An error occurred while processing the request data',
+		})
 	}
-	next()
 }
 
-// Middleware to validate JSON content type for POST/PUT requests
+/**
+ * Middleware to validate content type for requests with body data
+ *
+ * Features:
+ * - Only validates content type for HTTP methods that typically send body data (POST, PUT, PATCH)
+ * - Accepts application/json and its variants (e.g., with charset=utf-8)
+ * - Provides detailed error messages with accepted content types
+ * - Returns appropriate HTTP status codes (400 for missing header, 415 for unsupported type)
+ * - Skips validation for methods that don't require JSON (GET, DELETE, HEAD, OPTIONS)
+ *
+ * Error Responses:
+ * - 400 Bad Request: When Content-Type header is missing for methods requiring JSON
+ * - 415 Unsupported Media Type: When Content-Type is present but not JSON
+ *
+ * Supported Content Types:
+ * - application/json
+ * - application/json; charset=utf-8
+ * - application/json; charset=UTF-8 (and other charset variants)
+ */
 const validateContentType = (req, res, next) => {
-	if (['POST', 'PUT'].includes(req.method)) {
-		if (!req.is('application/json')) {
+	// Define methods that typically require JSON content type
+	const methodsRequiringJson = ['POST', 'PUT', 'PATCH']
+
+	// Only validate content type for methods that send body data
+	if (methodsRequiringJson.includes(req.method)) {
+		const contentType = req.get('Content-Type')
+
+		// Handle missing Content-Type header
+		if (!contentType) {
 			return res.status(400).json({
-				error: 'Invalid content type',
-				details: 'Content-Type must be application/json',
+				error: 'Missing Content-Type header',
+				details:
+					'Content-Type header is required for this request. Please set it to application/json.',
+				acceptedTypes: [
+					'application/json',
+					'application/json; charset=utf-8',
+				],
+			})
+		}
+
+		// Check for JSON content type, including variants with charset
+		// req.is() handles charset variants automatically
+		if (!req.is('application/json')) {
+			return res.status(415).json({
+				error: 'Unsupported Media Type',
+				details: `Content-Type '${contentType}' is not supported. This API only accepts JSON data.`,
+				acceptedTypes: [
+					'application/json',
+					'application/json; charset=utf-8',
+				],
+				receivedType: contentType,
 			})
 		}
 	}
+
 	next()
 }
 
@@ -175,6 +244,14 @@ const validatePriorityLevel = (req, res, next) => {
 
 // Middleware to validate query parameters for filtering and sorting
 const validateQueryParams = (req, res, next) => {
+	// Ensure req.query is an object before accessing properties
+	if (!req.query || typeof req.query !== 'object') {
+		return res.status(400).json({
+			error: 'Invalid query parameters',
+			details: 'Query parameters must be provided as a valid object',
+		})
+	}
+
 	const { completed, sortBy, order } = req.query
 
 	// Validate completed filter
@@ -185,12 +262,15 @@ const validateQueryParams = (req, res, next) => {
 				details: 'completed parameter must be "true" or "false"',
 			})
 		}
-		req.query.completed = completed.toLowerCase() === 'true'
+		req.query.completed = completed.toLowerCase() == 'true'
 	}
 
 	// Validate sortBy parameter
 	if (sortBy !== undefined) {
-		const validSortFields = ['createdAt', 'title', 'priority', 'completed']
+		// Get valid sort fields from Task model to avoid hardcoding
+		const validSortFields = Task.getSortableFields
+			? Task.getSortableFields()
+			: ['createdAt', 'title', 'priority', 'completed']
 		if (!validSortFields.includes(sortBy)) {
 			return res.status(400).json({
 				error: 'Invalid sort field',

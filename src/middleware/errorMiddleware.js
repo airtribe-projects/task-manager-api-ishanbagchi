@@ -1,10 +1,33 @@
+const winston = require('winston')
+
+// Winston logger setup for error handling
+const logger = winston.createLogger({
+	level: 'error',
+	format: winston.format.combine(
+		winston.format.timestamp(),
+		winston.format.errors({ stack: true }),
+		winston.format.json(),
+	),
+	transports: [
+		new winston.transports.Console({
+			format: winston.format.combine(
+				winston.format.colorize(),
+				winston.format.simple(),
+			),
+		}),
+		// You can add file transport for error logs
+		// new winston.transports.File({ filename: 'logs/error.log', level: 'error' })
+	],
+})
+
 // Error handling middleware
 const errorHandler = (err, req, res, next) => {
-	console.error('Error occurred:', {
+	logger.error('Error occurred:', {
 		message: err.message,
 		stack: err.stack,
 		url: req.url,
 		method: req.method,
+		timestamp: new Date().toISOString(),
 	})
 
 	// Default error response
@@ -25,14 +48,10 @@ const errorHandler = (err, req, res, next) => {
 		status = 400
 		message = 'Invalid JSON'
 		details = 'Request body contains invalid JSON'
-	} else if (err.code === 'ENOTFOUND') {
-		status = 503
-		message = 'Service Unavailable'
-		details = 'External service not available'
 	}
 
 	const errorResponse = {
-		error: message,
+		errorMessage: message,
 		details,
 		timestamp: new Date().toISOString(),
 		path: req.url,
@@ -49,23 +68,11 @@ const errorHandler = (err, req, res, next) => {
 // 404 handler for undefined routes
 const notFoundHandler = (req, res) => {
 	res.status(404).json({
-		error: 'Route not found',
+		errorMessage: 'Route not found',
 		details: `The requested endpoint ${req.method} ${req.url} does not exist`,
 		timestamp: new Date().toISOString(),
-		availableEndpoints: {
-			tasks: {
-				'GET /tasks':
-					'Get all tasks (supports ?completed=true/false&sortBy=createdAt/title/priority&order=asc/desc)',
-				'GET /tasks/:id': 'Get task by ID',
-				'GET /tasks/priority/:level':
-					'Get tasks by priority (low/medium/high)',
-				'POST /tasks':
-					'Create new task (supports title, description, completed, priority)',
-				'PUT /tasks/:id':
-					'Update task by ID (supports title, description, completed, priority)',
-				'DELETE /tasks/:id': 'Delete task by ID',
-			},
-		},
+		suggestion:
+			'Please check the API documentation for available endpoints',
 	})
 }
 

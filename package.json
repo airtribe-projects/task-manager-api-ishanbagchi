@@ -16,7 +16,8 @@
 		"tap": "^18.6.1"
 	},
 	"dependencies": {
-		"express": "^4.18.2"
+		"express": "^4.18.2",
+		"winston": "^3.17.0"
 	},
 	"engines": {
 		"node": ">= 18.0.0"

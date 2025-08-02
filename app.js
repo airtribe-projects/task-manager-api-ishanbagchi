@@ -1,9 +1,17 @@
 const express = require('express')
+const winston = require('winston')
 const routes = require('./src/routes')
 const {
 	errorHandler,
 	notFoundHandler,
 } = require('./src/middleware/errorMiddleware')
+
+// Simple winston logger for app.js fallback scenarios
+const logger = winston.createLogger({
+	level: 'error',
+	format: winston.format.simple(),
+	transports: [new winston.transports.Console()],
+})
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -23,9 +31,9 @@ app.use(errorHandler)
 if (require.main === module) {
 	app.listen(port, (err) => {
 		if (err) {
-			return console.log('Something bad happened', err)
+			return logger.error('Failed to start server:', err)
 		}
-		console.log(`Server is listening on ${port}`)
+		logger.info(`Server is listening on port ${port}`)
 	})
 }
 
