@@ -21,7 +21,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // Routes
-app.use('/', routes)
+app.use('/api/v1', routes)
 
 // Error handling
 app.use(notFoundHandler)

@@ -2,6 +2,14 @@
 
 A RESTful API for managing tasks with CRUD operations built with Express.js and in-memory storage.
 
+## Base URL
+
+All API endpoints are prefixed with `/api/v1`
+
+```
+Base URL: http://localhost:3000/api/v1
+```
+
 ## Project Structure
 
 ```
@@ -40,7 +48,7 @@ A RESTful API for managing tasks with CRUD operations built with Express.js and 
 
 ## API Endpoints
 
-### GET /tasks
+### GET /api/v1/tasks
 
 Retrieve all tasks with optional filtering and sorting.
 
@@ -59,19 +67,19 @@ Retrieve all tasks with optional filtering and sorting.
 
 ```bash
 # Get all tasks
-curl http://localhost:3000/tasks
+curl http://localhost:3000/api/v1/tasks
 
 # Get completed tasks
-curl "http://localhost:3000/tasks?completed=true"
+curl "http://localhost:3000/api/v1/tasks?completed=true"
 
 # Get tasks sorted by priority (high to low)
-curl "http://localhost:3000/tasks?sortBy=priority&order=desc"
+curl "http://localhost:3000/api/v1/tasks?sortBy=priority&order=desc"
 
 # Combine filters and sorting
-curl "http://localhost:3000/tasks?completed=false&sortBy=createdAt&order=asc"
+curl "http://localhost:3000/api/v1/tasks?completed=false&sortBy=createdAt&order=asc"
 ```
 
-### GET /tasks/priority/:level
+### GET /api/v1/tasks/priority/:level
 
 Retrieve tasks by priority level.
 
@@ -88,10 +96,10 @@ Retrieve tasks by priority level.
 **Example:**
 
 ```bash
-curl http://localhost:3000/tasks/priority/high
+curl http://localhost:3000/api/v1/tasks/priority/high
 ```
 
-### GET /tasks/:id
+### GET /api/v1/tasks/:id
 
 Retrieve a specific task by its ID.
 
@@ -108,10 +116,10 @@ Retrieve a specific task by its ID.
 **Example:**
 
 ```bash
-curl http://localhost:3000/tasks/1
+curl http://localhost:3000/api/v1/tasks/1
 ```
 
-### POST /tasks
+### POST /api/v1/tasks
 
 Create a new task with the required fields.
 
@@ -135,7 +143,7 @@ Create a new task with the required fields.
 **Example:**
 
 ```bash
-curl -X POST http://localhost:3000/tasks \
+curl -X POST http://localhost:3000/api/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "title": "New Task",
@@ -144,7 +152,7 @@ curl -X POST http://localhost:3000/tasks \
   }'
 ```
 
-### PUT /tasks/:id
+### PUT /api/v1/tasks/:id
 
 Update an existing task by its ID.
 
@@ -173,7 +181,7 @@ Update an existing task by its ID.
 **Example:**
 
 ```bash
-curl -X PUT http://localhost:3000/tasks/1 \
+curl -X PUT http://localhost:3000/api/v1/tasks/1 \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Updated Task",
@@ -181,7 +189,7 @@ curl -X PUT http://localhost:3000/tasks/1 \
   }'
 ```
 
-### DELETE /tasks/:id
+### DELETE /api/v1/tasks/:id
 
 Delete a task by its ID.
 
@@ -198,7 +206,7 @@ Delete a task by its ID.
 **Example:**
 
 ```bash
-curl -X DELETE http://localhost:3000/tasks/1
+curl -X DELETE http://localhost:3000/api/v1/tasks/1
 ```
 
 ## Installation & Setup
@@ -222,7 +230,36 @@ curl -X DELETE http://localhost:3000/tasks/1
     npm start
     ```
 
-5. The API will be available at `http://localhost:3000`
+5. The API will be available at `http://localhost:3000/api/v1`
+
+## API Versioning
+
+This API uses URL path versioning for better backwards compatibility and evolution.
+
+**Current Version:** `v1`
+
+-   **Base URL:** `http://localhost:3000/api/v1`
+-   **Version Strategy:** URL path versioning (`/api/v1/`)
+-   **Backwards Compatibility:** Legacy endpoints (without version prefix) return 404
+
+### Why Versioning?
+
+-   **Backwards Compatibility:** Ensures existing clients continue to work
+-   **Smooth Transitions:** Allows gradual migration to new API versions
+-   **Clear Documentation:** Makes API evolution explicit and traceable
+-   **Future Growth:** Enables adding new features without breaking changes
+
+### Migration Guide
+
+If you're using legacy endpoints, update your requests:
+
+```bash
+# Old (returns 404)
+GET http://localhost:3000/tasks
+
+# New (v1)
+GET http://localhost:3000/api/v1/tasks
+```
 
 ## Testing
 
