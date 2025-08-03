@@ -7,7 +7,10 @@
 		"start": "node server.js",
 		"dev": "nodemon server.js",
 		"pretest": "node -e \"if (process.version.slice(1).split('.')[0] < 18) { console.error('Unsupported Node.js version, please use version 18'); process.exit(1); }\"",
-		"test": "tap test/*.js --disable-coverage"
+		"test": "tap test/*.js --disable-coverage",
+		"test:coverage": "tap test/*.js --coverage-report=html --coverage-report=text",
+		"test:watch": "tap test/*.js --watch --disable-coverage",
+		"coverage": "npm run test:coverage"
 	},
 	"author": "Ishan Bagchi",
 	"license": "ISC",

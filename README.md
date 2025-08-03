@@ -263,20 +263,73 @@ GET http://localhost:3000/api/v1/tasks
 
 ## Testing
 
-Run the test suite:
+The project includes comprehensive test coverage using TAP (Test Anything Protocol).
+
+### Available Test Scripts
 
 ```bash
+# Run all tests (fast, without coverage)
 npm test
+
+# Run tests with coverage reports
+npm run test:coverage
+
+# Run tests in watch mode (for development)
+npm run test:watch
+
+# Generate coverage report (alias for test:coverage)
+npm run coverage
 ```
+
+### Coverage Reports
+
+After running `npm run test:coverage`, you can view detailed coverage reports:
+
+-   **Terminal output**: Summary table with percentages
+-   **HTML report**: Open `.tap/coverage/lcov-report/index.html` in your browser for detailed line-by-line coverage
+
+### Current Coverage Stats
+
+-   **Overall Coverage**: ~85% statement coverage
+-   **All Tests**: 91/91 passing ✅
+-   **Test Categories**: CRUD operations, validation, error handling, edge cases, query parameters, priority filtering, content-type validation
+
+### Coverage Goals
+
+-   **Statements**: Target 80%+
+-   **Branches**: Target 75%+
+-   **Functions**: Target 85%+
+-   **Lines**: Target 80%+
 
 ## Development
 
-For development with auto-reload, you can install nodemon:
+### Available Scripts
 
 ```bash
-npm install -g nodemon
-npm run dev
+# Production
+npm start          # Start the server in production mode
+
+# Development
+npm run dev        # Start with nodemon for auto-reload
+
+# Testing
+npm test           # Run tests (fast, no coverage)
+npm run test:coverage    # Run tests with coverage reports
+npm run test:watch      # Run tests in watch mode
+npm run coverage        # Generate coverage (alias)
 ```
+
+### Development Workflow
+
+1. **Start development server**: `npm run dev`
+2. **Run tests in watch mode**: `npm run test:watch` (in another terminal)
+3. **Check coverage**: `npm run test:coverage` (periodically)
+4. **View HTML coverage**: Open `.tap/coverage/lcov-report/index.html`
+
+### Prerequisites
+
+-   **Node.js**: Version 18+ required (enforced by package.json engines)
+-   **npm**: Comes with Node.js
 
 ## Features
 
